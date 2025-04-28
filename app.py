@@ -17,13 +17,20 @@ def get_gemini_response(question, prompt):
     return response.text
 
 # Function to retrieve query from DuckDB
+# Function to retrieve query from DuckDB
 def read_sql_query(sql, db):
-    conn = duckdb.connect(db)
+    conn = duckdb.connect(database=db, read_only=True)
+
+    # Attach the deliveries database
+    conn.execute("ATTACH DATABASE 'deliveries.duckdb' AS deliveries_db")
+
     cur = conn.cursor()
     cur.execute(sql)
     rows = cur.fetchall()
+
     conn.close()
     return rows
+
 
 # Define your prompt for the model
 
