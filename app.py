@@ -143,8 +143,7 @@ if st.button("Submit"):
         sql_query = sql_query[sql_query.find('SELECT'):]
 
         # Replace table names
-        sql_query = sql_query.replace("FROM deliveries", "FROM deliveries_db.deliveries")
-        sql_query = sql_query.replace("JOIN deliveries", "JOIN deliveries_db.deliveries")
+        
         sql_query = sql_query.replace("FROM ipl", "FROM ipl_db.ipl")
         sql_query = sql_query.replace("JOIN ipl", "JOIN ipl_db.ipl")
 
