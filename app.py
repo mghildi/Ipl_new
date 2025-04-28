@@ -21,8 +21,11 @@ def get_gemini_response(question, prompt):
 def read_sql_query(sql, db):
     conn = duckdb.connect(database=db, read_only=True)
 
-    # Attach the deliveries database
+    # Attach the deliveries.duckdb database as deliveries_db
     conn.execute("ATTACH DATABASE 'deliveries.duckdb' AS deliveries_db")
+
+    # Create a view so that IPL database knows about deliveries table
+    conn.execute("CREATE OR REPLACE VIEW deliveries AS SELECT * FROM deliveries_db.deliveries")
 
     cur = conn.cursor()
     cur.execute(sql)
