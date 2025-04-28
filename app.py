@@ -27,8 +27,7 @@ def read_sql_query(sql, db):
 
 # Define your prompt for the model
 
-prompt = """
-You are an expert in converting English questions into SQL queries.
+prompt = """ You are an expert in converting English questions into SQL queries.
 
 There are two tables:
 
@@ -76,7 +75,7 @@ There are two tables:
 **Important rules:**
 - To extract **season year** from `ipl.season`, always use `SUBSTR(season, 1, 4)` in SQL.
 - To JOIN **ipl** and **deliveries** tables, use `ipl.id = deliveries.match_id`.
-- Avoid using triple quotes ''' or """ around SQL queries.
+- Avoid using triple quotes ''' or "" around SQL queries.
 
 **Example Questions:**
 
@@ -103,7 +102,6 @@ LIMIT 5
 
 Example 5 - Find all matches that ended in a Super Over.
 SQL Query: SELECT * FROM ipl WHERE super_over = 'Y'
-
 """
 
 
