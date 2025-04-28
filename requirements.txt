@@ -1,7 +1,5 @@
 fastapi
 uvicorn
-gradio
 duckdb
 google-generativeai
-python-dotenv
-requests
+gradio
