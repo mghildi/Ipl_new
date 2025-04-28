@@ -152,7 +152,8 @@ if st.button("Submit"):
         st.code(sql_query, language='sql')
 
         try:
-            data = read_sql_query(sql_query, "ipl.duckdb")
+            
+            data = read_sql_query(sql_query)
             st.success("Query executed successfully. Here are the results:")
             for row in data:
                 st.write(row)
