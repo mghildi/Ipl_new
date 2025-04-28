@@ -26,11 +26,15 @@ def read_sql_query(sql, db):
     return rows
 
 # Define your prompt for the model
+
 prompt = """
-You are an expert in converting English questions to SQL queries.
-The SQL database has a table 'ipl' with the following columns:
+You are an expert in converting English questions into SQL queries.
+
+There are two tables:
+
+1. **ipl** (Match-level information)
 - id INT
-- season VARCHAR
+- season VARCHAR (example: '2007/08')
 - city VARCHAR
 - date DATE
 - match_type VARCHAR
@@ -50,32 +54,58 @@ The SQL database has a table 'ipl' with the following columns:
 - umpire1 VARCHAR
 - umpire2 VARCHAR
 
-Example 1 - How many matches were played in the 2020 season?
-SQL Query: SELECT COUNT(*) FROM ipl WHERE season = '2020'
+2. **deliveries** (Ball-by-ball information)
+- match_id INT (foreign key joining with ipl.id)
+- inning INT
+- batting_team VARCHAR
+- bowling_team VARCHAR
+- over INT
+- ball INT
+- batter VARCHAR
+- bowler VARCHAR
+- non_striker VARCHAR
+- batsman_runs INT
+- extra_runs INT
+- total_runs INT
+- extras_type VARCHAR
+- is_wicket INT
+- player_dismissed VARCHAR
+- dismissal_kind VARCHAR
+- fielder VARCHAR
 
-Example 2 - Which team won the most matches in Mumbai city?
-SQL Query: SELECT winner, COUNT(*) AS wins FROM ipl WHERE city = 'Mumbai' GROUP BY winner ORDER BY wins DESC LIMIT 1
+**Important rules:**
+- To extract **season year** from `ipl.season`, always use `SUBSTR(season, 1, 4)` in SQL.
+- To JOIN **ipl** and **deliveries** tables, use `ipl.id = deliveries.match_id`.
+- Avoid using triple quotes ''' or """ around SQL queries.
 
-Example 3 - How many matches ended in a super over?
-SQL Query: SELECT COUNT(*) FROM ipl WHERE super_over = 'Y'
+**Example Questions:**
 
-Example 4 - List all matches where Delhi Capitals were team1.
-SQL Query: SELECT * FROM ipl WHERE team1 = 'Delhi Capitals'
+Example 1 - How many matches were played in 2008 season?
+SQL Query: SELECT COUNT(*) FROM ipl WHERE SUBSTR(season, 1, 4) = '2008'
 
-Example 5 - What is the highest target_runs chased?
-SQL Query: SELECT MAX(target_runs) FROM ipl
+Example 2 - Which team has won the most matches?
+SQL Query: SELECT winner, COUNT(*) AS wins FROM ipl GROUP BY winner ORDER BY wins DESC LIMIT 1
 
-Example 6 - List players who won player_of_match more than 5 times.
-SQL Query: SELECT player_of_match, COUNT(*) AS awards FROM ipl GROUP BY player_of_match HAVING awards > 5 ORDER BY awards DESC
+Example 3 - How many sixes were hit in 2019?
+SQL Query: 
+SELECT COUNT(*) 
+FROM deliveries 
+JOIN ipl ON deliveries.match_id = ipl.id 
+WHERE batsman_runs = 6 AND SUBSTR(season, 1, 4) = '2019'
 
-Example 7 - Find matches where toss_decision was 'field' and result was 'wickets'.
-SQL Query: SELECT * FROM ipl WHERE toss_decision = 'field' AND result = 'wickets'
+Example 4 - List top 5 players with most runs scored.
+SQL Query: 
+SELECT batter, SUM(batsman_runs) AS total_runs 
+FROM deliveries 
+GROUP BY batter 
+ORDER BY total_runs DESC 
+LIMIT 5
 
-Example 8 - How many matches used 'D/L' method?
-SQL Query: SELECT COUNT(*) FROM ipl WHERE method = 'D/L'
+Example 5 - Find all matches that ended in a Super Over.
+SQL Query: SELECT * FROM ipl WHERE super_over = 'Y'
 
-Also, the SQL code should not have ''' or "" at the beginning or end of the SQL query.
 """
+
 
 # Main functionality
 question = st.text_input("Enter your question:")
