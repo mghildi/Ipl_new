@@ -119,12 +119,18 @@ if st.button("Submit"):
             with st.spinner("Generating SQL query..."):
                 response = get_gemini_response(question, prompt)
 
-                if "SQL Query:" in response:
+                # 🛠 Clean the response to extract only SQL
+                if "```sql" in response:
+                    sql_query = response.split("```sql")[1].split("```")[0].strip()
+                elif "SQL Query:" in response:
                     sql_query = response.split("SQL Query:")[1].strip()
                 else:
                     sql_query = response.strip()
 
                 st.code(sql_query, language='sql')
+
+
+                
 
                 # Execute and show the data
                 data = read_sql_query(sql_query, "ipl.duckdb")
