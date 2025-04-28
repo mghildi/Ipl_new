@@ -18,28 +18,27 @@ def get_gemini_response(question, prompt):
 
 # Function to retrieve query from DuckDB
 # Function to retrieve query from DuckDB
-def read_sql_query(sql, db):
-    conn = duckdb.connect(database=db, read_only=True)
+def read_sql_query(sql):
+    # Open an in-memory database
+    conn = duckdb.connect(database=":memory:")
 
-    # Attach the deliveries.duckdb database as deliveries_db
+    # Attach both duckdb files
+    conn.execute("ATTACH DATABASE 'ipl.duckdb' AS ipl_db")
     conn.execute("ATTACH DATABASE 'deliveries.duckdb' AS deliveries_db")
-
-    # Create a view so that IPL database knows about deliveries table
-    conn.execute("CREATE OR REPLACE VIEW deliveries AS SELECT * FROM deliveries_db.deliveries")
 
     cur = conn.cursor()
     cur.execute(sql)
     rows = cur.fetchall()
-
+    
     conn.close()
     return rows
 
 
 # Define your prompt for the model
 
-prompt = """ You are an expert in converting English questions into SQL queries.
+prompt = """ You are an expert in converting English questions into pure SQL queries without any extra text.
 
-There are two tables:
+There are two tables available:
 
 1. **ipl** (Match-level information)
 - id INT
@@ -82,37 +81,41 @@ There are two tables:
 - dismissal_kind VARCHAR
 - fielder VARCHAR
 
-Important rules:
-- To extract **season year** from `ipl.season`, always use `SUBSTR(season, 1, 4)` in SQL.
-- To JOIN **ipl** and **deliveries_db.deliveries**, use `ipl.id = deliveries_db.deliveries.match_id`.
-- Always refer **deliveries table** as `deliveries_db.deliveries` in the query.
-- Avoid using triple quotes ''' or "" around SQL queries.
+Important Rules you must always follow:
+- Extract the **year** from `ipl.season` using: `SUBSTR(season, 1, 4)`.
+- When joining, use: `ipl.id = deliveries_db.deliveries.match_id`.
+- Always refer to deliveries table as **deliveries_db.deliveries**.
+- **Never** write explanations like "Here's the SQL query" or "Okay, here it is".
+- **Never** use ```sql or ```triple quotes.
+- Your output must be **only** the pure SQL query, starting directly with `SELECT` or `WITH`.
 
-Example Questions:
+Example questions and answers:
 
-Example 1 - How many matches were played in 2008 season?
-SQL Query: SELECT COUNT(*) FROM ipl WHERE SUBSTR(season, 1, 4) = '2008'
+Example 1: How many matches were played in 2008 season?
+Answer:
+SELECT COUNT(*) FROM ipl WHERE SUBSTR(season, 1, 4) = '2008'
 
-Example 2 - Which team has won the most matches?
-SQL Query: SELECT winner, COUNT(*) AS wins FROM ipl GROUP BY winner ORDER BY wins DESC LIMIT 1
+Example 2: Which team has won the most matches?
+Answer:
+SELECT winner, COUNT(*) AS wins FROM ipl GROUP BY winner ORDER BY wins DESC LIMIT 1
 
-Example 3 - How many sixes were hit in 2019?
-SQL Query:
+Example 3: How many sixes were hit in 2019?
+Answer:
 SELECT COUNT(*)
 FROM deliveries_db.deliveries
 JOIN ipl ON deliveries_db.deliveries.match_id = ipl.id
 WHERE batsman_runs = 6 AND SUBSTR(season, 1, 4) = '2019'
 
-Example 4 - List top 5 players with most runs scored.
-SQL Query:
+Example 4: List top 5 players with most runs scored.
+Answer:
 SELECT batter, SUM(batsman_runs) AS total_runs
 FROM deliveries_db.deliveries
 GROUP BY batter
 ORDER BY total_runs DESC
 LIMIT 5
 
-Example 5 - Find all matches that ended in a Super Over.
-SQL Query: SELECT * FROM ipl WHERE super_over = 'Y'
+
+
 """
 
 
@@ -124,14 +127,27 @@ if st.button("Submit"):
         response = get_gemini_response(question, prompt)
 
         # Clean the response
+        import re
+
+# After getting response
         if "SQL Query:" in response:
             sql_query = response.split("SQL Query:")[1].strip()
         else:
             sql_query = response.strip()
 
-        # 🛠 Fix: replace 'deliveries' with 'deliveries_db.deliveries'
+        # Clean unwanted text
+        # Remove anything like ```sql ... ```
+        sql_query = re.sub(r"```sql|```", "", sql_query)
+
+        # Remove any 'Okay' or text before SELECT
+        sql_query = sql_query[sql_query.find('SELECT'):]
+
+        # Replace table names
         sql_query = sql_query.replace("FROM deliveries", "FROM deliveries_db.deliveries")
         sql_query = sql_query.replace("JOIN deliveries", "JOIN deliveries_db.deliveries")
+        sql_query = sql_query.replace("FROM ipl", "FROM ipl_db.ipl")
+        sql_query = sql_query.replace("JOIN ipl", "JOIN ipl_db.ipl")
+
 
         st.code(sql_query, language='sql')
 
