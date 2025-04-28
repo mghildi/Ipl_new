@@ -99,12 +99,15 @@ Example 2: Which team has won the most matches?
 Answer:
 SELECT winner, COUNT(*) AS wins FROM ipl GROUP BY winner ORDER BY wins DESC LIMIT 1
 
-Example 3: How many sixes were hit in 2019?
+Example 3: Which player hit most sixes in 2019?
 Answer:
-SELECT COUNT(*)
+SELECT batter, COUNT(*) AS sixes
 FROM deliveries_db.deliveries
-JOIN ipl ON deliveries_db.deliveries.match_id = ipl.id
+JOIN ipl_db.ipl ON deliveries_db.deliveries.match_id = ipl.id
 WHERE batsman_runs = 6 AND SUBSTR(season, 1, 4) = '2019'
+GROUP BY batter
+ORDER BY sixes DESC
+LIMIT 1
 
 Example 4: List top 5 players with most runs scored.
 Answer:
