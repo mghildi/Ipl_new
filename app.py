@@ -22,7 +22,7 @@ def read_sql_query(sql, db):
     conn = duckdb.connect(database=db, read_only=True)
 
     # Attach the deliveries database
-    conn.execute("ATTACH DATABASE 'deliveries.duckdb' AS deliveries_db")
+    conn.execute("ATTACH DATABASE 'deliveries.duckdb' AS deliveries")
 
     cur = conn.cursor()
     cur.execute(sql)
