@@ -152,9 +152,16 @@ if st.button("Submit"):
 
         try:
             
+            
             data = read_sql_query(sql_query)
-            st.success("Query executed successfully. Here are the results:")
-            for row in data:
-                st.write(row)
+
+            import pandas as pd  # ✅ Add pandas if not imported
+            df_result = pd.DataFrame(data)
+
+            if not df_result.empty:
+                st.success("Query executed successfully. Here are the results:")
+                st.dataframe(df_result)  # ✅ Show nicely
+            else:
+                st.warning("Query executed but no results found.")
         except Exception as e:
             st.error(f"Error executing SQL: {e}")
