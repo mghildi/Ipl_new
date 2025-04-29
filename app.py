@@ -73,7 +73,7 @@ def generate_sql(question):
     sql = sql.replace("FROM ipl", "FROM ipl_db.ipl")
     sql = sql.replace("JOIN ipl", "JOIN ipl_db.ipl")
     sql = sql.replace("ipl.", "ipl_db.ipl.")   # << this fixes columns like ipl.winner
-
+    sql = sql.replace("FROM ipl_db.ipl_db.ipl", "FROM ipl_db.ipl")  
     return sql
 
 # DuckDB query
