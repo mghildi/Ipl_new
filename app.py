@@ -73,6 +73,12 @@ def generate_sql(question):
     sql = sql.replace("FROM ipl", "FROM ipl_db.ipl")
     sql = sql.replace("JOIN ipl", "JOIN ipl_db.ipl")
 
+    # Fix if double replacement happened
+    sql = sql.replace("FROM ipl_db.ipl_db.ipl", "FROM ipl_db.ipl")
+    sql = sql.replace("JOIN ipl_db.ipl_db.ipl", "JOIN ipl_db.ipl")
+
+
+
     return sql
 
 # Function to query DuckDB
