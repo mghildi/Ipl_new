@@ -57,26 +57,25 @@ def generate_sql(question):
     response = model.generate_content([prompt, question])
     sql = response.text.strip()
 
-    # Clean up
-    if "SQL Query:" in sql:
-        sql = sql.split("SQL Query:")[1].strip()
+    # Remove everything before actual query
+    sql = re.sub(r"(?i)(sql query:|answer:)", "", sql)
+    sql = re.sub(r"```sql|```", "", sql).strip()
 
-    sql = re.sub(r"```sql|```", "", sql)
-    if 'SELECT' in sql:
-        sql = sql[sql.find('SELECT'):]
-    if 'WITH' in sql:
-        sql = sql[sql.find('WITH'):]
+    # Ensure we start from SELECT or WITH
+    if "SELECT" in sql.upper():
+        sql = sql[sql.upper().find("SELECT"):]
+    elif "WITH" in sql.upper():
+        sql = sql[sql.upper().find("WITH"):]
 
-    # 🚨 Careful replacements
+    # Fix incorrect table names
     sql = sql.replace("FROM deliveries", "FROM deliveries_db.deliveries")
     sql = sql.replace("JOIN deliveries", "JOIN deliveries_db.deliveries")
     sql = sql.replace("FROM ipl", "FROM ipl_db.ipl")
     sql = sql.replace("JOIN ipl", "JOIN ipl_db.ipl")
-    sql = sql.replace("ipl.", "ipl_db.ipl.")   # << this fixes columns like ipl.winner
-    sql = sql.replace("ipl_db.ipl_db.ipl", "FROM ipl_db.ipl")
-    sql = sql.replace("deliveries_db.deliveries_db.deliveries", "deliveries_db.deliveries")  
-   
-    
+    sql = sql.replace("ipl.", "ipl_db.ipl.")
+    sql = sql.replace("ipl_db.ipl_db.ipl", "ipl_db.ipl")  # remove duplicates
+    sql = sql.replace("deliveries_db.deliveries_db.deliveries", "deliveries_db.deliveries")
+
     return sql
 
 # DuckDB query
