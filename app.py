@@ -57,6 +57,7 @@ def generate_sql(question):
     response = model.generate_content([prompt, question])
     sql = response.text.strip()
 
+    # Clean up
     if "SQL Query:" in sql:
         sql = sql.split("SQL Query:")[1].strip()
 
@@ -65,11 +66,13 @@ def generate_sql(question):
         sql = sql[sql.find('SELECT'):]
     if 'WITH' in sql:
         sql = sql[sql.find('WITH'):]
-    
+
+    # 🚨 Careful replacements
     sql = sql.replace("FROM deliveries", "FROM deliveries_db.deliveries")
     sql = sql.replace("JOIN deliveries", "JOIN deliveries_db.deliveries")
     sql = sql.replace("FROM ipl", "FROM ipl_db.ipl")
     sql = sql.replace("JOIN ipl", "JOIN ipl_db.ipl")
+    sql = sql.replace("ipl.", "ipl_db.ipl.")   # << this fixes columns like ipl.winner
 
     return sql
 
